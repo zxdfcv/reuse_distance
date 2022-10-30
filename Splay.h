@@ -62,7 +62,8 @@ public:
 
     static Tree *find_rank(T r, Tree *t);
 
-    static void read_mem(const string &trace_path, int l1_cache_line_size, int block_id, int m_kernel_id);
+    static void read_mem(const string &trace_path, int l1_cache_line_size, int block_id, int m_kernel_id,
+                         std::vector<std::pair<long long, int> > &coalesced_address);
 
     static void printtree(Tree *t, int d);
 
@@ -70,8 +71,6 @@ public:
 };
 
 //std::map<int, std::vector<mem_inst *> > mem_inst_map;
-std::vector<std::pair<long long, int> > coalesced_address;
-
 #define compare(i, j) ((i)-(j))
 
 #define node_size(x) (((x)==NULL) ? 0 : ((x)->size))
