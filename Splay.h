@@ -62,7 +62,7 @@ public:
 
     static Tree *find_rank(T r, Tree *t);
 
-    static void read_mem(const string &trace_path, int l1_cache_line_size, int block_id, int m_kernel_id,
+    static bool read_mem(const string &trace_path, int l1_cache_line_size, int block_id, int m_kernel_id,
                          std::vector<std::pair<long long, int> > &coalesced_address);
 
     static void printtree(Tree *t, int d);

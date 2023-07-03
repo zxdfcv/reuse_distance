@@ -5,6 +5,7 @@
 #include <queue>
 #include <cmath>
 #include <sstream>
+#include <iostream>
 #include "Splay.h" //配合头文件使用，互补
 
 Tree *Tree::Splay(T i, Tree *t) {
@@ -234,31 +235,39 @@ void Tree::printtree(Tree *t, int d) {
     printtree(t->left, d + 1);
 }
 
-void Tree::read_mem(const string &trace_path, int l1_cache_line_size, int block_id, int m_kernel_id,
-                    std::vector<std::pair<long long, int> > &coalesced_address) {
+bool Tree::read_mem(const string &trace_path, int l1_cache_line_size, int block_id, int m_kernel_id, //修改读入逻辑，处理读入数据
+                    std::vector<std::pair<long long, int> > &coalesced_addresses) {
 
     std::ifstream mem_trace;
     if (block_id != -1) {
-        mem_trace.open(trace_path + "/kernel-" + std::to_string(m_kernel_id) + "-block-" +
-                       std::to_string(block_id)  + ".mem",
-                       std::ios::in); //打开文件
+        mem_trace.open(trace_path + "\\kernel-" + std::to_string(m_kernel_id) + "-block-" +
+                       std::to_string(block_id)  + ".mem",std::ios::in); //打开文件
+        // printf("here\n");
+        if (!mem_trace.good()) {
+            printf("end\n");
+            return false;
+        }
     } else {
-        mem_trace.open(trace_path + "/kernel-" + std::to_string(m_kernel_id) + ".mem",
-                       std::ios::in); //打开文件
+        mem_trace.open(trace_path + "\\kernel-" + std::to_string(m_kernel_id) + ".mem",
+                       std::ios::in); //打开
+                       std::cout << mem_trace.is_open() << std::endl;
+        if (!mem_trace.good()) {
+            return false;
+        }
     }
     string line;
     //unsigned sector_num = 0;
     std::map<int, std::map<long long, int> > block_pc_num;  // warp_id:{pc:pc_num}
     while (std::getline(mem_trace, line)) {
-        if (line != "\n") {
+        if (line != "\n") { //block
             if (line != "====") {
                 std::istringstream is(line);
                 std::string str;
                 std::queue<std::string> tmp_str;
                 while (is >> str) {
                     tmp_str.push(str);
-                }
-                tmp_str.pop();
+                }//文件读入
+                //tmp_str.pop();  具体的sm少一个pop
                 //int warp_id = std::stoi(tmp_str.front());
                 tmp_str.pop();
 
@@ -271,7 +280,7 @@ void Tree::read_mem(const string &trace_path, int l1_cache_line_size, int block_
                 if (opcode!= "LDG.E.SYS" && opcode != "STG.E.SYS")
                 {
                     continue;
-                }
+                } //第四项
 //                int pc_index = 0;
 //                if (block_pc_num.find(warp_id) != block_pc_num.end()) { //find常规操作
 //                    if (block_pc_num[warp_id].find(pc) != block_pc_num[warp_id].end()) {
@@ -283,7 +292,7 @@ void Tree::read_mem(const string &trace_path, int l1_cache_line_size, int block_
 //                } else {
 //                    block_pc_num[warp_id][pc] = 0;
 //                } //暂时不用
-
+                std::vector<std::pair<long long, int> > coalesced_address;
                 while (!tmp_str.empty()) {//coalescing the addresses of the warp
                     string warp_address = tmp_str.front();
 //                    if (warp_address!= "LDG.E.SYS" && warp_address != "STG.E.SYS")
@@ -302,13 +311,16 @@ void Tree::read_mem(const string &trace_path, int l1_cache_line_size, int block_
                                   std::pair<long long, int>(cache_line_addr, sector_mask)) ==
                         coalesced_address.end()) {
                         coalesced_address.emplace_back(std::pair<long long, int>(cache_line_addr, sector_mask));
+                        coalesced_addresses.emplace_back(std::pair<long long, int>
+                                (cache_line_addr, sector_mask));
                     }
                 }
                 //sector_num += coalesced_address.size();
                 //mem_inst_map[warp_id].push_back(new mem_inst(opcode, coalesced_address, pc, pc_index));
             }
         }
-    }
+    } //这里是处理数据的代码，用来处理真实硬件的trace
     mem_trace.close();
+    return true;
 }
 

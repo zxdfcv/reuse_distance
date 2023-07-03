@@ -3,4 +3,4 @@ project(splay)
 
 set(CMAKE_CXX_STANDARD 14)
 
-add_executable(splay main.cpp Splay.cpp Splay.h)
+add_executable(splay main.cpp Splay.cpp Splay.h sm.cpp sm.h)
