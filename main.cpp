@@ -41,38 +41,19 @@ unsigned get_set_id(unsigned addr) {
 }
 
 int main() { //同时回顾下命名空间的使用->C++第八讲
-    //coalesced_address在头文件中已经声明，其作用相当于seq
     std::vector<sm> sms(sm_num);
-    //std::vector<std::pair<long long, int> > coalesced_addresses;
-    //std::vector<std::unordered_map<long long, int>> hash_map(1024);//地址到时间的映射
-    //std::vector<std::vector<long long>> hit(1024, std::vector<long long>(1));//是否命中序列
-    //std::vector<std::vector<long long>> seq(1024, std::vector<long long>(1));//序列
-    //std::vector<std::vector<long long>> stkDis(1024, std::vector<long long>(1)); //栈的距离
-    //std::vector<Tree*>nodes(1024);
-    //FILE *fp = fopen("E:\\CUDA\\splay\\test2.txt", "r");
-    //char line[105];
     long long addr;
     int sector;
     int time = 0;//从零开始记录时间
-    //int type = 1;//set大小 type = 1为全相联？
-    //int success = 0;//成功次数
-//    if (fgets(line, 104, fp) != nullptr)
-//    {
-//        type = std::stoi(line);
-//    } else {
-//        printf("type error\n");
-//        return 0;
-//    }
 
-    string name = "dwt2d";
-//    string trace_path = "E:\\Science_research\\CUDA\\splay";
+    string name = "nw";
     string trace_path = "E:\\Science_research\\Flex-GPU-2022_12_22\\flex-gpusim\\benchmarks";
     string des = "ans-" + name + "-mem-1.txt";
     int r;
     int block_cnt = 0;
     int active_sm = 0;
     while (true) {
-        r = Tree::read_mem(trace_path + "\\" + name + "\\traces", 128, block_cnt, 2,
+        r = Tree::read_mem(trace_path + "\\" + name + "\\traces", 128, block_cnt, 6,
                            sms[block_cnt % (sm_num)].coalesced_addresses); //地址聚合
         if (!r) {
             break; //判断文件是否正常打开
@@ -80,21 +61,15 @@ int main() { //同时回顾下命名空间的使用->C++第八讲
         block_cnt++;
     }
     active_sm = sm_num <= (block_cnt  + 1) ? sm_num : (block_cnt + 1);
-    //Tree::read_mem(trace_path + "\\" + name + "\\traces", 128, -1, 1,
-    //               coalesced_addresses);
     std::ofstream out;
-    //out.open("E:\\CUDA\\splay\\ans\\" + des ,std::ios_base::out);
     out.open("E:\\Science_research4\\splay\\ans\\" + des ,std::ios::out);
     std::cout << out.is_open() << std::endl;
     printf("type: %d\n", l1_cache_n_sets);
-    //while (fgets(line, 104, fp) != nullptr) { //
     for (int i = 0; i < active_sm; i++) { // 这样按顺序读取并拼接是有问题的
         time = 0;
         for (auto it: sms[i].coalesced_addresses) {
             time++;
             long long rank = get_set_id(addr); //分 set
-            //printf("%lld\n",rank);
-            //num = std::stoi(line);
             addr = it.first;
             sector = it.second;//输入的第二个数
             //seq[rank].push_back(addr);
@@ -103,7 +78,6 @@ int main() { //同时回顾下命名空间的使用->C++第八讲
                 sms[i].hit[rank].push_back(false);//未命中
                 sms[i].nodes[rank]= Tree::Insert(time, sms[i].nodes[rank], sector);//最多添加一个sector
                 sms[i].hash_map[rank][addr] = time;
-                //sms[i].stkDis[rank].push_back(INT_MAX);//初始化为无穷大
 
                 printf("MISS\n");
                 continue;
@@ -149,8 +123,6 @@ int main() { //同时回顾下命名空间的使用->C++第八讲
                 }
                 //sms[i].stkDis[rank].push_back(sms[i].nodes[rank]->right->size);
             }
-//        nodes[rank] = Tree::Delete(now, nodes[rank]);//删除原有的节点主要是二叉树排序树的性质
-//        nodes[rank] = Tree::Insert(time, nodes[rank], sector);
             sms[i].nodes[rank] = Tree::Modify(now, sms[i].nodes[rank], time);
             sms[i].hash_map[rank][addr] = time;//输入的是访存数据
         }
@@ -159,14 +131,7 @@ int main() { //同时回顾下命名空间的使用->C++第八讲
     //fclose(fp);
     for (int i = 0; i < active_sm; i++) {
         for (int j = 0; j < l1_cache_n_sets; j++) {
-//        printf ("set:%d\n", i);
-//        for (int j = 1; j < hit.size(); j++) {
-//            //printf("set:%d j:%d seq:%lld stkDis:%lld hit:%lld\n", i, j, seq[i][j], stkDis[i][j], hit[i][j]);
-//            printf("set:%d j:%d addr:%lld sector:%d stkDis:%lld hit:%lld\n", i, j, coalesced_addresses[j].first,
-//                   coalesced_addresses[j].second, stkDis[i][j],
-//                   hit[i][j]);
-//            //if (hit[i][j]) success++;
-//        }
+
             Tree::freetree(sms[i].nodes[j]);
         }
     }
@@ -182,9 +147,6 @@ int main() { //同时回顾下命名空间的使用->C++第八讲
     printf("%.2f\n", hit_rate);
     printf("%u %u\n", final_hit, total_hit);
     out << hit_rate << std::endl;
-        //    printf("%lf\n", (double) success / (hit[0].size() - 1));//注意匹配 //只有一个set
-        //    out << std::to_string((double) success / (hit[0].size() - 1)) << std::endl;
-        //    printf("%llu %d", hit[0].size() - 1, time);
     return 0; //仅仅考虑l1
 }
 //第二阶段：多个set
