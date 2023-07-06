@@ -55,7 +55,7 @@ void execute_sms(int i, sm* sm1) {
         //seq[rank].push_back(addr);
         // printf("sm: %d addr: %lld sector:%d ", i, addr, sector);
         if (sm1->hash_map[rank].find(addr) == sm1->hash_map[rank].end()) {
-            sm1->hit[rank].push_back(bool);//未命中
+            sm1->hit[rank].push_back(false);//未命中
             sm1->nodes[rank]= Tree::Insert(time, sm1->nodes[rank], sector);//最多添加一个sector
             sm1->hash_map[rank][addr] = time;
 
@@ -87,9 +87,9 @@ void execute_sms(int i, sm* sm1) {
                     sm1->success++;
                     // printf("HIT\n");
                 } else {
-                    if (sm1->nodes[rank]->left != nullptr) {
-                        Tree::freetree(sm1->nodes[rank]->left);
-                    }
+                    // if (sm1->nodes[rank]->left != nullptr) {
+                    //    Tree::freetree(sm1->nodes[rank]->left);
+                    // }
                     sm1->hit[rank].push_back(false);
                     // printf("SECTOR_MISS\n");
                     sm1->nodes[rank]->sector[sector] = 1;
@@ -131,14 +131,14 @@ int main() { //同时回顾下命名空间的使用->C++第八讲
     int sector;
     int time = 0;//从零开始记录时间
 
-    string name = "b+tree";
+    string name = "SSSP";
     string trace_path = "E:\\Science_research\\Flex-GPU-2022_12_22\\flex-gpusim\\benchmarks";
-    string des = "ans-" + name + "-mem-1.txt";
+    // string des = "ans-" + name + "-mem-1.txt";
     int r;
     int block_cnt = 0;
     int active_sm = 0;
     while (true) {
-        r = Tree::read_mem(trace_path + "\\" + name + "\\traces", 128, block_cnt, 1,
+        r = Tree::read_mem(trace_path + "\\" + name + "\\traces", 128, block_cnt, 5,
                            sms[block_cnt % (sm_num)]->coalesced_addresses); //地址聚合
         if (!r) {
             break; //判断文件是否正常打开
@@ -146,9 +146,9 @@ int main() { //同时回顾下命名空间的使用->C++第八讲
         block_cnt++;
     }
     active_sm = sm_num <= (block_cnt + 1) ? sm_num : (block_cnt + 1);
-    std::ofstream out;
-    out.open("E:\\Science_research4\\splay\\ans\\" + des ,std::ios::out);
-    std::cout << out.is_open() << std::endl;
+    // std::ofstream out;
+    // out.open("E:\\Science_research4\\splay\\ans\\" + des ,std::ios::out);
+    // std::cout << out.is_open() << std::endl;
     // printf("type: %d\n", l1_cache_n_sets);
     std::thread t1(sm_cycle, active_sm, std::ref(sms));
     t1.join();
@@ -161,9 +161,6 @@ int main() { //同时回顾下命名空间的使用->C++第八讲
             Tree::freetree(sms[i]->nodes[j]);
         }
     }
-    for (int i = 0; i < sm_num; i++) {
-        delete(sms[i]);
-    }
     unsigned final_hit = 0;
     unsigned total_hit = 0;
     for (int i = 0; i < active_sm; i++) {
@@ -172,10 +169,14 @@ int main() { //同时回顾下命名空间的使用->C++第八讲
         }
         final_hit += sms[i]->success;
     }
+    for (int i = 0; i < sm_num; i++) {
+        delete(sms[i]);
+    }
+
     double hit_rate = (double) final_hit / total_hit;
     printf("%.2f\n", hit_rate);
     printf("%u %u\n", final_hit, total_hit);
-    out << hit_rate << std::endl;
+    // out << hit_rate << std::endl;
     return 0; //仅仅考虑l1
 }
 //第二阶段：多个set
