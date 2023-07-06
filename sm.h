@@ -13,8 +13,7 @@
 
 class sm {
 public:
-    sm() : hash_map(1024), hit(1024, std::vector<long long>(1)), stkDis(1024,
-                                                                        std::vector<long long>(1)),nodes
+    sm() : hash_map(1024), hit(1024, std::vector<long long>(1)), nodes
                                                                         (l1_cache_n_sets),
                                                                         success(0) {
 
@@ -22,7 +21,6 @@ public:
     std::vector<std::pair<long long, int> > coalesced_addresses;
     std::vector<std::unordered_map<long long, int>> hash_map;//地址到时间的映射
     std::vector<std::vector<long long>> hit;//是否命中
-    std::vector<std::vector<long long>> stkDis; //栈的距离
     std::vector<Tree*> nodes;
     unsigned success;
 };

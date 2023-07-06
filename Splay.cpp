@@ -244,7 +244,7 @@ bool Tree::read_mem(const string &trace_path, int l1_cache_line_size, int block_
                        std::to_string(block_id)  + ".mem",std::ios::in); //打开文件
         // printf("here\n");
         if (!mem_trace.good()) {
-            printf("end\n");
+            printf("reading end\n");
             return false;
         }
     } else {
