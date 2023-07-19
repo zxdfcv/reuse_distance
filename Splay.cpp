@@ -8,15 +8,19 @@
 #include <iostream>
 #include "Splay.h" //配合头文件使用，互补
 
+unsigned sector_num = L1_CACHE_LINE / SECTOR_SIZE;
+
 Tree *Tree::Splay(T i, Tree *t) {
     Tree N, *l, *r, *y;
     T comp, l_size, r_size;
     if (t == nullptr) return t;
+    // std::cout << t << std::endl;
     N.left = N.right = nullptr;
     l = r = &N;
     l_size = r_size = 0;
 
     for (;;) {
+        // std::cout << t->key << std::endl;
         comp = compare(i, t->key);
         if (comp < 0) {
             if (t->left == nullptr) break;
@@ -82,6 +86,7 @@ Tree *Tree::Insert(T i, Tree *t, T sector) {
     Tree *New;
 
     if (t != nullptr) {
+        // std::cout << t << std::endl;
         t = Splay(i, t);
         if (compare(i, t->key) == 0) {
             return t;  /* it's already there */
@@ -187,7 +192,7 @@ Tree *Tree::Modify(T i, Tree *t, T v) {
             x->right = t->right;
         }
         x = Insert(v, x);//修改访问时间->删旧添新
-        for (int j = 0; j < SECTOR_SIZE; j++) {
+        for (int j = 0; j < sector_num; j++) {
             x->sector[j] = temp->sector[j];
         }
         free(t);
@@ -240,7 +245,7 @@ bool Tree::read_mem(const string &trace_path, int l1_cache_line_size, int block_
 
     std::ifstream mem_trace;
     if (block_id != -1) {
-        mem_trace.open(trace_path + "\\kernel-" + std::to_string(m_kernel_id) + "-block-" +
+        mem_trace.open(trace_path + "/kernel-" + std::to_string(m_kernel_id) + "-block-" +
                        std::to_string(block_id)  + ".mem",std::ios::in); //打开文件
         // printf("here\n");
         if (!mem_trace.good()) {
@@ -248,9 +253,9 @@ bool Tree::read_mem(const string &trace_path, int l1_cache_line_size, int block_
             return false;
         }
     } else {
-        mem_trace.open(trace_path + "\\kernel-" + std::to_string(m_kernel_id) + ".mem",
+        mem_trace.open(trace_path + "/kernel-" + std::to_string(m_kernel_id) + ".mem",
                        std::ios::in); //打开
-                       std::cout << mem_trace.is_open() << std::endl;
+        std::cout << mem_trace.is_open() << std::endl;
         if (!mem_trace.good()) {
             return false;
         }
@@ -277,7 +282,7 @@ bool Tree::read_mem(const string &trace_path, int l1_cache_line_size, int block_
 
                 string opcode = tmp_str.front();
                 tmp_str.pop();//暂时不用
-                if (opcode!= "LDG.E.SYS" && opcode != "STG.E.SYS")
+                if (opcode.substr(0, 3) != "LDG" && opcode.substr(0, 3) != "STG")
                 {
                     continue;
                 } //第四项
@@ -312,7 +317,7 @@ bool Tree::read_mem(const string &trace_path, int l1_cache_line_size, int block_
                         coalesced_address.end()) {
                         coalesced_address.emplace_back(std::pair<long long, int>(cache_line_addr, sector_mask));
                         coalesced_addresses.emplace_back(std::pair<long long, int>
-                                (cache_line_addr, sector_mask));
+                                                                 (cache_line_addr, sector_mask));
                     }
                 }
                 //sector_num += coalesced_address.size();

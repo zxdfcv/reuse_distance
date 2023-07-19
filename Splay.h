@@ -5,7 +5,7 @@
 #ifndef SPLAY_SPLAY_H
 #define SPLAY_SPLAY_H
 #define SECTOR_SIZE 32
-
+#define L1_CACHE_LINE 128
 #include <cstdio>
 #include <cstdlib>
 #include "algorithm"
@@ -13,7 +13,7 @@
 #include <fstream>
 #include <map>
 #include <cstring>
-
+#include <vector>
 using std::string;
 typedef int T;
 

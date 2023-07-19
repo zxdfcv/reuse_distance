@@ -4,7 +4,7 @@
 
 #ifndef SPLAY_SM_H
 #define SPLAY_SM_H
-#define l1_cache_n_sets 1
+#define l1_cache_n_sets 4
 
 
 #include <vector>
@@ -14,8 +14,8 @@
 class sm {
 public:
     sm() : hash_map(1024), hit(1024, std::vector<long long>(1)), nodes
-                                                                        (l1_cache_n_sets),
-                                                                        success(0) {
+            (l1_cache_n_sets),
+           success(0) {
 
     }
     std::vector<std::pair<long long, int> > coalesced_addresses;
